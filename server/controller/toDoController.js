@@ -1,5 +1,5 @@
 const todo = require('../models/toDoModel')
-
+const User = require('../models/userModel')
 const asyncHandler = require('express-async-handler')
 
 
@@ -9,7 +9,7 @@ const asyncHandler = require('express-async-handler')
 // access private
 const getToDos = asyncHandler(
     async (req, res) => {
-        const todos = await todo.find()
+        const todos = await todo.find({user: req.user.id})
         res.status(200).json(todos)
     }
 ) 
@@ -23,7 +23,10 @@ const createToDo = asyncHandler(
             res.status(400)
             throw new Error('Please add a text field!')
         }
-        const toDo = await todo.create(req.body)
+        const toDo = await todo.create({
+            text: req.body.text,
+            user: req.user.id
+        })
         res.status(200).json(toDo)
     }
 ) 
@@ -37,6 +40,17 @@ const updateToDo = asyncHandler(async (req, res) => {
         res.status(400)
         throw new Error('Todo not found')
     }
+    // check user
+    const user = await User.findById(req.user.id)
+    if(!user){
+        res.status(401)
+        throw new Error('User not found')
+    }
+    // check todo author is logged in user
+    if(toDo.user.toString() !== user.id){
+        res.status(401)
+        throw new Error('Not authorized')
+    }
     const updatedToDo = await todo.findByIdAndUpdate(req.params.id, req.body, {new: true})
     res.status(200).json(updatedToDo)
 })
@@ -49,6 +63,16 @@ const deleteToDo = asyncHandler(async (req, res) => {
     if(!toDo){
         res.status(400)
         throw new Error('Todo not found')
+    }
+    const user = await User.findById(req.user.id)
+    if(!user){
+        res.status(401)
+        throw new Error('User not found')
+    }
+    // check todo author is logged in user
+    if(toDo.user.toString() !== user.id){
+        res.status(401)
+        throw new Error('Not authorized')
     }
     const deletedToDo = await(todo.findByIdAndDelete(req.params.id))
     res.status(200).json(deletedToDo)
