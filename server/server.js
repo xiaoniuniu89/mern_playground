@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 require('dotenv').config()
 const { errorHandler } = require('./middleware/errorMiddleware')
-
+const connectDB = require('./config/db')
 const port = process.env.PORT
 
 // middleware 
@@ -13,6 +13,10 @@ app.use('/api/todos', require('./routes/toDoRoutes'))
 
 app.use(errorHandler)
 
+
+// db
+
+connectDB()
 
 
 // run server

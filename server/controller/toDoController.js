@@ -1,10 +1,16 @@
+const todo = require('../models/toDoModel')
+
 const asyncHandler = require('express-async-handler')
+
+
+
 // get todos 
 // route GET /api/todos
 // access private
 const getToDos = asyncHandler(
     async (req, res) => {
-        res.status(200).json({message: 'get todos'})
+        const todos = await todo.find()
+        res.status(200).json(todos)
     }
 ) 
 
@@ -17,7 +23,8 @@ const createToDo = asyncHandler(
             res.status(400)
             throw new Error('Please add a text field!')
         }
-        res.status(200).json({message: 'create todo'})
+        const toDo = await todo.create(req.body)
+        res.status(200).json(toDo)
     }
 ) 
 
@@ -25,14 +32,26 @@ const createToDo = asyncHandler(
 // route PUT /api/todos/:id
 // access private
 const updateToDo = asyncHandler(async (req, res) => {
-    res.status(200).json({message: `update todo #${req.params.id}`})
+    const toDo = await todo.findById(req.params.id)
+    if(!toDo){
+        res.status(400)
+        throw new Error('Todo not found')
+    }
+    const updatedToDo = await todo.findByIdAndUpdate(req.params.id, req.body, {new: true})
+    res.status(200).json(updatedToDo)
 })
 
 // delete todos 
 // route DELETE /api/todos/:id
 // access private
 const deleteToDo = asyncHandler(async (req, res) => {
-    res.status(200).json({message: `delete todo #${req.params.id}`})
+    const toDo = await todo.findById(req.params.id)
+    if(!toDo){
+        res.status(400)
+        throw new Error('Todo not found')
+    }
+    const deletedToDo = await(todo.findByIdAndDelete(req.params.id))
+    res.status(200).json(deletedToDo)
 })
 
 module.exports = {
